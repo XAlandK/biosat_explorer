@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Knowledge Graph — Bion-M 1</title>
+  <link rel="stylesheet" href="https://unpkg.com/vis-network/styles/vis-network.min.css" />
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 320px; }
+    #network { width: 100%; height: 100vh; background: #fafafa; }
+    .sidebar { padding: 12px; border-left: 1px solid #e6e6e6; background: #fff; overflow: auto; }
+    .legend { margin-top: 8px; }
+    .legend-item { display:flex; align-items:center; gap:8px; margin:6px 0; }
+    .color-box { width:18px; height:14px; border-radius:3px; }
+    .controls { display:flex; flex-direction:column; gap:8px; }
+    button { padding:8px 10px; border-radius:6px; border:1px solid #d0d0d0; background:#fff; cursor:pointer; }
+    .footer-note { margin-top:12px; font-size:13px; color:#555; }
+    .search { margin-bottom:8px; display:flex; gap:6px; }
+    input[type="text"]{ padding:8px; border-radius:6px; border:1px solid #ddd; width:100%; }
+  </style>
+</head>
+<body>
+  <div id="network"></div>
+  <div class="sidebar">
+    <h3>Controls</h3>
+    <div class="controls">
+      <div class="search">
+        <input id="searchInput" placeholder="Search node label..." />
+        <button id="searchBtn">Find</button>
+      </div>
+      <div>
+        <label><input type="checkbox" class="type-filter" value="Experiment" checked /> Experiment</label><br>
+        <label><input type="checkbox" class="type-filter" value="Organism" checked /> Organism</label><br>
+        <label><input type="checkbox" class="type-filter" value="Process" checked /> Process</label><br>
+        <label><input type="checkbox" class="type-filter" value="Cell Type" checked /> Cell Type</label><br>
+        <label><input type="checkbox" class="type-filter" value="Tool/Method" checked /> Tool/Method</label><br>
+        <label><input type="checkbox" class="type-filter" value="Parameter" checked /> Parameter</label>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button id="resetBtn">Reset view</button>
+        <button id="downloadJsonBtn">Download JSON</button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <h4>Legend</h4>
+      <div class="legend-item"><div class="color-box" style="background:#2b8cff"></div> Experiment</div>
+      <div class="legend-item"><div class="color-box" style="background:#ff7f50"></div> Organism</div>
+      <div class="legend-item"><div class="color-box" style="background:#7bd389"></div> Process</div>
+      <div class="legend-item"><div class="color-box" style="background:#a980ff"></div> Cell Type</div>
+      <div class="legend-item"><div class="color-box" style="background:#ffa94d"></div> Tool/Method</div>
+      <div class="legend-item"><div class="color-box" style="background:#b0b0b0"></div> Parameter</div>
+    </div>
+
+    <div class="footer-note">
+      Tip: drag nodes to arrange them. Click a node to highlight its edges. Use the checkboxes to filter types.
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <script>
+    // ====== Data (from your JSON) ======
+    const dataJson = {
+      "nodes": [
+        { "id": 1, "label": "Bion-M 1 Mission", "type": "Experiment" },
+        { "id": 2, "label": "Mice", "type": "Organism" },
+        { "id": 3, "label": "Training and Selection", "type": "Process" },
+        { "id": 4, "label": "Adipose-Derived Stem Cells (ADSCs)", "type": "Cell Type" },
+        { "id": 5, "label": "Microgravity Culture", "type": "Process" },
+        { "id": 6, "label": "Stirred Microspheres", "type": "Tool/Method" },
+        { "id": 7, "label": "Cell Proliferation", "type": "Process" },
+        { "id": 8, "label": "Multilineage Differentiation", "type": "Process" },
+        { "id": 9, "label": "Stress Resistance", "type": "Parameter" }
+      ],
+      "relations": [
+        { "source": 1, "target": 2, "relation": "subjects" },
+        { "source": 1, "target": 3, "relation": "involved" },
+        { "source": 5, "target": 4, "relation": "affects" },
+        { "source": 5, "target": 6, "relation": "uses" },
+        { "source": 5, "target": 7, "relation": "increases" },
+        { "source": 5, "target": 8, "relation": "enhances" },
+        { "source": 5, "target": 9, "relation": "increases" },
+        { "source": 4, "target": 8, "relation": "exhibits" },
+        { "source": 4, "target": 9, "relation": "exhibits" }
+      ]
+    };
+
+    // color map by type
+    const typeColor = {
+      'Experiment': '#2b8cff',
+      'Organism': '#ff7f50',
+      'Process': '#7bd389',
+      'Cell Type': '#a980ff',
+      'Tool/Method': '#ffa94d',
+      'Parameter': '#b0b0b0'
+    };
+
+    // Convert to vis format
+    const nodes = dataJson.nodes.map(n => ({
+      id: n.id,
+      label: n.label,
+      title: `${n.label} (${n.type})`,
+      group: n.type,
+      color: { background: typeColor[n.type] || '#cccccc', border: '#666' },
+      shape: 'ellipse',
+      font: { multi: 'html' }
+    }));
+
+    const edges = dataJson.relations.map(r => ({
+      from: r.source,
+      to: r.target,
+      label: r.relation,
+      arrows: 'to',
+      font: { align: 'middle' },
+      smooth: { type: 'cubicBezier' }
+    }));
+
+    const container = document.getElementById('network');
+    const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+    const options = {
+      groups: {},
+      interaction: { hover: true, multiselect: false },
+      physics: { stabilization: true, barnesHut: { gravitationalConstant: -3000, springLength: 150 } },
+      edges: { color: { color: '#666' }, font: { size: 12 } },
+      nodes: { borderWidth: 2, chosen: { node: function(values, id, selected, hovering) { values.borderWidth = 4 } } }
+    };
+
+    const network = new vis.Network(container, data, options);
+
+    // Click behavior: highlight node neighbors
+    network.on('click', function(params) {
+      if (params.nodes.length) {
+        const nodeId = params.nodes[0];
+        const connected = network.getConnectedNodes(nodeId);
+        // dim all nodes
+        data.nodes.forEach(n => data.nodes.update({ id: n.id, color: { background: '#eee', border: '#ddd' } }));
+        // highlight chosen and its neighbors
+        data.nodes.update({ id: nodeId, color: { background: '#fff200', border: '#ff7700' } });
+        connected.forEach(id => {
+          const node = data.nodes.get(id);
+          data.nodes.update({ id: id, color: { background: typeColor[node.group] || '#ddd', border: '#666' } });
+        });
+      } else {
+        // restore colors when background clicked
+        data.nodes.forEach(n => data.nodes.update({ id: n.id, color: { background: typeColor[n.group] || '#ddd', border: '#666' } }));
+      }
+    });
+
+    // Search
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!q) return;
+      const found = data.nodes.get().filter(n => n.label.toLowerCase().includes(q));
+      if (found.length) {
+        network.selectNodes(found.map(f => f.id));
+        network.focus(found[0].id, {scale: 1.2});
+      } else {
+        alert('No nodes found for: ' + q);
+      }
+    });
+
+    // Reset view
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      network.stabilize();
+      data.nodes.forEach(n => data.nodes.update({ id: n.id, color: { background: typeColor[n.group] || '#ddd', border: '#666' } }));
+      network.fit({ animation: true });
+    });
+
+    // Filter by type
+    document.querySelectorAll('.type-filter').forEach(chk => chk.addEventListener('change', () => {
+      const checked = Array.from(document.querySelectorAll('.type-filter:checked')).map(c => c.value);
+      const toShow = dataJson.nodes.filter(n => checked.includes(n.type)).map(n => n.id);
+      data.nodes.forEach(n => data.nodes.update({ id: n.id, hidden: !toShow.includes(n.id) }));
+      data.edges.forEach(e => data.edges.update({ id: e.id, hidden: !(toShow.includes(e.from) && toShow.includes(e.to)) }));
+    }));
+
+    // Download JSON
+    document.getElementById('downloadJsonBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(dataJson, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'bion-m1-knowledge-graph.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // initial fit
+    network.once('afterDrawing', () => network.fit({ animation: true }));
+  </script>
+</body>
+</html>
