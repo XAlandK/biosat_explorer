@@ -1,16 +1,11 @@
-# biosat_explorer
+# BioSat Explorer
 
-A new Flutter project.
 
-## Getting Started
+Please visit the following link to access the Materials Branch:  
 
-This project is a starting point for a Flutter application.
+🔗 [Go to Materials Branch](https://github.com/XAlandK/biosat_explorer/tree/Materials)
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Thank you for your interest in BioSat Explorer!  
+All future updates, datasets, and documentation are maintained in the **Materials** branch.
