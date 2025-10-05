@@ -2,6 +2,15 @@
 
 A Flutter-based research article exploration app that enables semantic search and AI-powered analysis of scientific publications using Google's Gemini AI and Supabase vector database.
 
+Exploring research papers provided by NASA containing space experiments that affect the journey towards going to Moon and Mars.
+
+### Try Here: 🔗 [BioSat Explorer Web App](https://biosat-explorer.vercel.app/) 
+  
+![NASA Logo](https://github.com/user-attachments/assets/f2a94b39-fbdc-40b5-9ccf-cc812cb3a2b4)
+<!-- 
+<img width="1665" height="1393" alt="Image" src="https://github.com/user-attachments/assets/f2a94b39-fbdc-40b5-9ccf-cc812cb3a2b4"/> -->
+
+
 
 
 ## 🌟 Features
