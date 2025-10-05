@@ -1,0 +1,133 @@
+
+CREATE TABLE public.article_author (
+  research_article_id integer NOT NULL,
+  author_id integer NOT NULL,
+  CONSTRAINT article_author_pkey PRIMARY KEY (research_article_id, author_id),
+  CONSTRAINT article_author_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id),
+  CONSTRAINT article_author_author_id_fkey FOREIGN KEY (author_id) REFERENCES public.author(id)
+);
+CREATE TABLE public.article_dataset (
+  research_article_id integer NOT NULL,
+  dataset_id integer NOT NULL,
+  CONSTRAINT article_dataset_pkey PRIMARY KEY (research_article_id, dataset_id),
+  CONSTRAINT article_dataset_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id),
+  CONSTRAINT article_dataset_dataset_id_fkey FOREIGN KEY (dataset_id) REFERENCES public.dataset(id)
+);
+CREATE TABLE public.article_keyword (
+  research_article_id integer NOT NULL,
+  keyword_id integer NOT NULL,
+  CONSTRAINT article_keyword_pkey PRIMARY KEY (keyword_id, research_article_id),
+  CONSTRAINT article_keyword_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id),
+  CONSTRAINT article_keyword_keyword_id_fkey FOREIGN KEY (keyword_id) REFERENCES public.keyword(id)
+);
+CREATE TABLE public.author (
+  id integer NOT NULL DEFAULT nextval('author_id_seq'::regclass),
+  full_name text NOT NULL UNIQUE,
+  CONSTRAINT author_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.body_content (
+  id integer NOT NULL DEFAULT nextval('body_content_id_seq'::regclass),
+  research_article_id integer,
+  heading text,
+  content text,
+  vector_nyan USER-DEFINED,
+  CONSTRAINT body_content_pkey PRIMARY KEY (id),
+  CONSTRAINT body_content_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id)
+);
+CREATE TABLE public.cited_by_article (
+  id integer NOT NULL DEFAULT nextval('cited_by_article_id_seq'::regclass),
+  research_article_id integer,
+  title text,
+  url text,
+  journal text,
+  CONSTRAINT cited_by_article_pkey PRIMARY KEY (id),
+  CONSTRAINT cited_by_article_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id)
+);
+CREATE TABLE public.dataset (
+  id integer NOT NULL DEFAULT nextval('dataset_id_seq'::regclass),
+  name text NOT NULL,
+  source text,
+  identifier text UNIQUE,
+  CONSTRAINT dataset_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.experiment_table (
+  id integer NOT NULL DEFAULT nextval('experiment_table_id_seq'::regclass),
+  research_article_id integer,
+  body_content_id integer,
+  caption text,
+  section text,
+  CONSTRAINT experiment_table_pkey PRIMARY KEY (id),
+  CONSTRAINT experiment_table_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id),
+  CONSTRAINT experiment_table_body_content_id_fkey FOREIGN KEY (body_content_id) REFERENCES public.body_content(id)
+);
+CREATE TABLE public.experiment_table_row (
+  id integer NOT NULL DEFAULT nextval('experiment_table_row_id_seq'::regclass),
+  experiment_table_id integer,
+  row_index integer,
+  cells jsonb,
+  CONSTRAINT experiment_table_row_pkey PRIMARY KEY (id),
+  CONSTRAINT experiment_table_row_experiment_table_id_fkey FOREIGN KEY (experiment_table_id) REFERENCES public.experiment_table(id)
+);
+CREATE TABLE public.keyword (
+  id integer NOT NULL DEFAULT nextval('keyword_id_seq'::regclass),
+  term text UNIQUE,
+  CONSTRAINT keyword_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.nyan (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  research_paper_id bigint,
+  embedding USER-DEFINED,
+  CONSTRAINT nyan_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.reference (
+  id integer NOT NULL DEFAULT nextval('reference_id_seq'::regclass),
+  research_article_id integer,
+  citation_id text,
+  citation_text text,
+  CONSTRAINT reference_pkey PRIMARY KEY (id),
+  CONSTRAINT reference_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id)
+);
+CREATE TABLE public.research_article (
+  id integer NOT NULL DEFAULT nextval('research_article_id_seq'::regclass),
+  title text NOT NULL,
+  doi text UNIQUE,
+  pmid text UNIQUE,
+  pmc_id text UNIQUE,
+  source_url text,
+  publishedat text,
+  publishedat_formatted date,
+  vector_title USER-DEFINED,
+  vector_whole_content USER-DEFINED,
+  CONSTRAINT research_article_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.similar_article (
+  id integer NOT NULL DEFAULT nextval('similar_article_id_seq'::regclass),
+  research_article_id integer,
+  title text,
+  url text,
+  journal text,
+  CONSTRAINT similar_article_pkey PRIMARY KEY (id),
+  CONSTRAINT similar_article_research_article_id_fkey FOREIGN KEY (research_article_id) REFERENCES public.research_article(id)
+);
+CREATE TABLE public.test (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  name text NOT NULL,
+  CONSTRAINT test_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.users (
+  id uuid NOT NULL DEFAULT auth.uid(),
+  username character varying NOT NULL,
+  email character varying NOT NULL UNIQUE,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp without time zone,
+  CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.whole_body_of_each_article (
+  article_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  source_url text,
+  pmc_id text,
+  whole_content text,
+  vector_whole_content USER-DEFINED,
+  CONSTRAINT whole_body_of_each_article_pkey PRIMARY KEY (article_id)
+);
